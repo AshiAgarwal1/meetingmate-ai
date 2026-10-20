@@ -884,3 +884,18 @@ body {
     margin: 0;
   }
 }
+
+/* AI provider badge (shows which model answered) */
+.provider-badge {
+  margin: 0 0 16px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  background: #eef6ff;
+  color: #1d4ed8;
+  display: inline-block;
+}
+.provider-badge.degraded {
+  background: #fff4e5;
+  color: #b45309;
+}

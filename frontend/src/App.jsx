@@ -20,6 +20,7 @@ function App() {
   const [mode, setMode] = useState("live");
   const [transcript, setTranscript] = useState("");
   const [result, setResult] = useState("");
+  const [meta, setMeta] = useState(null);
   const [meetingCount, setMeetingCount] = useState(0);
 
   function handlePageChange(newPage) {
@@ -45,11 +46,13 @@ function App() {
 
     // Navigate immediately so the user sees feedback instead of a frozen button
     setResult("Analyzing meeting...");
+    setMeta(null);
     setActivePage("results");
 
     try {
       const response = await axios.post(`${API_URL}/analyze`, { transcript });
       setResult(response.data.analysis);
+      setMeta(response.data.meta || null);
       setMeetingCount((prev) => prev + 1);
     } catch (error) {
       console.error(error);
@@ -88,7 +91,7 @@ function App() {
           />
         )}
 
-        {activePage === "results" && <ResultsSection result={result} />}
+        {activePage === "results" && <ResultsSection result={result} meta={meta} />}
 
         {activePage === "about" && <About />}
       </div>

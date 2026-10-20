@@ -5,7 +5,7 @@ import ExportButtons from "./ExportButtons";
 import LoadingSpinner from "./LoadingSpinner";
 import EmptyState from "./EmptyState";
 
-function ResultsSection({ result }) {
+function ResultsSection({ result, meta }) {
   if (!result) {
     return <EmptyState />;
   }
@@ -32,6 +32,16 @@ function ResultsSection({ result }) {
         <h2>📋 Meeting Analysis</h2>
         <ExportButtons result={result} />
       </div>
+
+      {meta && (
+        <div className={`provider-badge ${meta.degraded ? "degraded" : ""}`}>
+          {meta.degraded
+            ? "⚠️ AI services unavailable - showing a basic offline summary"
+            : `⚡ Powered by ${meta.provider}${meta.cached ? " (cached)" : ""}`}
+          {!meta.degraded && meta.attempts?.length > 0 &&
+            ` - fell back after ${meta.attempts.length} failed provider(s)`}
+        </div>
+      )}
 
       <div className="section-cards-grid">
         {sections.map((section, i) => {
