@@ -1,74 +1,100 @@
 # MeetingMate AI
 
-An AI meeting assistant: paste a transcript (or record live in-browser),
-and it returns a structured summary, minutes, action items, decisions,
-risks, open questions, and next steps -- powered by Google Gemini.
+An AI-powered meeting assistant that converts meeting transcripts into structured summaries, meeting minutes, action items, decisions, risks, open questions, and next steps.
 
-## Stack
+**Live Demo:** https://meetingmate-ai.vercel.app  
+**GitHub:** https://github.com/AshiAgarwal1/meetingmate-ai
 
-- **Frontend:** React 19 + Vite, `react-markdown` for rendering results,
-  `react-dropzone` for `.txt` uploads, Web Speech API for live transcription
-- **Backend:** Flask + `google-generativeai`
+## Features
 
-## Project structure
+- **Transcript Analysis:** Generate structured meeting insights from text transcripts.
+- **Live Transcription:** Capture speech using the browser's Web Speech API.
+- **File Upload:** Upload `.txt` transcripts for analysis.
+- **Multiple AI Providers:** Gemini, Groq, and OpenRouter with automatic fallback.
+- **Error Handling:** Retries, provider cooldowns, and response caching.
+- **Local Fallback:** Generate a basic rule-based analysis if all AI providers fail.
+- **Security and Validation:** Transcript size limits, API rate limiting, and configured CORS origins.
 
-```
-meetingmate-ai/
-├── backend/     # Flask + Gemini API
-└── frontend/    # React + Vite
-```
+## Tech Stack
 
-## Run it locally
+- **Frontend:** React, Vite, JavaScript, Axios
+- **Backend:** Python, Flask, REST API
+- **AI Providers:** Google Gemini, Groq, OpenRouter
+- **Deployment:** Vercel (frontend), configurable Python hosting (backend)
 
-**Backend**
+## How It Works
+
+1. Enter a transcript, upload a text file, or use live transcription.
+2. The frontend sends the transcript to the Flask backend.
+3. The backend checks its response cache and attempts the configured AI providers in order.
+4. If a provider fails, the backend retries eligible errors or moves to another provider.
+5. If all AI providers fail, a rule-based fallback generates a basic analysis.
+6. The frontend displays the results in structured sections.
+
+## Run Locally
+
+### Backend
+
 ```bash
 cd backend
-cp .env.example .env        # then paste your GEMINI_API_KEY in
 python -m venv venv
-source venv/bin/activate     # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python app.py                 # http://127.0.0.1:5000
 ```
 
-**Frontend**
+Activate the environment:
+
+**Windows PowerShell**
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+**macOS/Linux**
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Copy `backend/.env.example` to `backend/.env` and add the API keys for the providers you want to use. Keep these keys private.
+
+Start the backend:
+
+```bash
+python app.py
+```
+
+Backend URL: `http://127.0.0.1:5000`
+
+### Frontend
+
+Open another terminal:
+
 ```bash
 cd frontend
-cp .env.example .env          # defaults to the local backend above
 npm install
-npm run dev                   # http://localhost:5173
 ```
 
-Get a `GEMINI_API_KEY` from [Google AI Studio](https://aistudio.google.com/apikey).
+Copy `frontend/.env.example` to `frontend/.env`. Set `VITE_API_URL` to your backend URL.
 
-## Deploying
+Start the frontend:
 
-**Backend (Render, Railway, Fly.io, etc.)**
-- Root directory: `backend`
-- Set env vars: `GEMINI_API_KEY`, `FRONTEND_ORIGINS` (your deployed frontend
-  URL, comma-separated if more than one), `GEMINI_MODEL` (optional, defaults
-  to `gemini-3.5-flash`)
-- Start command: `gunicorn app:app` (already in `Procfile`)
+```bash
+npm run dev
+```
 
-**Frontend (Vercel/Netlify)**
-- Root directory: `frontend`
-- Set env var `VITE_API_URL` to your deployed backend's URL
-- Build command `npm run build`, output directory `dist` (see `frontend/vercel.json`)
+Open `http://localhost:5173`.
 
-Deploy the backend first, then point the frontend's `VITE_API_URL` at it.
+## Deployment
 
-## Notes / limitations
+- **Backend:** Deploy the `backend` directory to a Python hosting platform. Configure the required API keys and `FRONTEND_ORIGINS`.
+- **Frontend:** Deploy the `frontend` directory to Vercel. Set `VITE_API_URL` to the deployed backend URL and use `npm run build` to build the application.
 
-- Live transcription uses the browser's Web Speech API -- Chrome and Edge
-  support it; Firefox and Safari currently don't.
-- Meeting results only live in memory for the current session -- refreshing
-  the page clears them. There's no database yet (see "Next steps" below).
-- Transcripts are capped at 100,000 characters, enforced on both the
-  frontend and the backend.
+## Limitations
 
-## Next steps
-
-Things I'd build next to take this from demo to product:
-- Persist meetings to a database (SQLite/Postgres) instead of just React state
-- Auth + per-user meeting history
-- Background job queue for long transcripts instead of a synchronous request
-- Tests (pytest for the backend, Vitest for the frontend) and CI
+- Live transcription depends on browser support for the Web Speech API.
+- Meeting history is not stored in a database.
+- Cache and cooldown state are held in memory and reset when the backend restarts.
+- The local fallback uses simple rules and is less capable than AI-generated analysis.
