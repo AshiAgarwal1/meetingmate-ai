@@ -72,7 +72,7 @@ function App() {
         <Header activePage={activePage} />
 
         {activePage === "dashboard" && (
-          <Dashboard mode={mode} meetingCount={meetingCount} setActivePage={handlePageChange} />
+          <Dashboard apiUrl={API_URL} mode={mode} meetingCount={meetingCount} setActivePage={handlePageChange} />
         )}
 
         {activePage === "live" && (

@@ -899,3 +899,6 @@ body {
   background: #fff4e5;
   color: #b45309;
 }
+.status-offline {
+  color: #dc2626;
+}

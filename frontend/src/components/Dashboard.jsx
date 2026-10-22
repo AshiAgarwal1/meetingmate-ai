@@ -1,6 +1,55 @@
+import { useEffect, useState } from "react";
 import meetingmateai from "../assets/meetingmateai.png";
 
-function Dashboard({ mode, meetingCount, setActivePage }) {
+const PROVIDER_LABELS = { gemini: "Gemini", groq: "Groq", openrouter: "OpenRouter" };
+
+function Dashboard({ mode, meetingCount, setActivePage, apiUrl }) {
+  // Real backend status (replaces the old hardcoded "Online / Gemini 1.5 Flash").
+  const [health, setHealth] = useState({ state: "checking", providers: [] });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    // Render's free tier can take ~1 minute to wake up, so allow a long wait.
+    const timer = setTimeout(() => controller.abort(), 70000);
+    const slowNotice = setTimeout(
+      () => setHealth((h) => (h.state === "checking" ? { ...h, state: "waking" } : h)),
+      4000
+    );
+
+    fetch(`${apiUrl}/health`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("bad status"))))
+      .then((data) => {
+        const active = Object.entries(data.providers || {})
+          .filter(([name, on]) => on && PROVIDER_LABELS[name])
+          .map(([name]) => PROVIDER_LABELS[name]);
+        setHealth({ state: "online", providers: active });
+      })
+      .catch(() => setHealth({ state: "offline", providers: [] }))
+      .finally(() => {
+        clearTimeout(timer);
+        clearTimeout(slowNotice);
+      });
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+      clearTimeout(slowNotice);
+    };
+  }, [apiUrl]);
+
+  const ai = {
+    checking: { value: "Checking...", cls: "", sub: "Contacting backend" },
+    waking: { value: "Waking up...", cls: "", sub: "Server is starting, please wait" },
+    offline: { value: "Offline", cls: "status-offline", sub: "Backend unreachable" },
+    online: health.providers.length
+      ? {
+          value: "Online",
+          cls: "status-online",
+          sub: `${health.providers.length} AI provider${health.providers.length > 1 ? "s" : ""}: ${health.providers.join(", ")}`,
+        }
+      : { value: "Limited", cls: "status-offline", sub: "No AI keys set - basic mode only" },
+  }[health.state];
+
   const quickActions = [
     {
       key: "live",
@@ -43,8 +92,8 @@ function Dashboard({ mode, meetingCount, setActivePage }) {
       <div className="status-grid">
         <div className="status-card">
           <span className="status-label">✨ AI Status</span>
-          <span className="status-value status-online">Online</span>
-          <span className="status-sub">Gemini 1.5 Flash</span>
+          <span className={`status-value ${ai.cls}`}>{ai.value}</span>
+          <span className="status-sub">{ai.sub}</span>
         </div>
 
         <div className="status-card">
@@ -62,7 +111,7 @@ function Dashboard({ mode, meetingCount, setActivePage }) {
         <div className="status-card">
           <span className="status-label">📁 Total Meetings</span>
           <span className="status-value">{meetingCount}</span>
-          <span className="status-sub">This month</span>
+          <span className="status-sub">This session</span>
         </div>
       </div>
 
